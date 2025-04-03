@@ -224,12 +224,19 @@ Util.checkAuthorizationManager = (req, res, next) => {
 
 
 
-Util.buildInbox = (messages) => {
-  inboxList = `
+Util.buildInbox = (messages = []) => {
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return `<p>No messages found in your inbox.</p>`;
+  }
+
+  let inboxList = `
   <table>
     <thead>
       <tr>
-        <th>Received</th><th>Subject</th><th>From</th><th>Read</th>
+        <th>Received</th>
+        <th>Subject</th>
+        <th>From</th>
+        <th>Read</th>
       </tr>
     </thead>
     <tbody>`;
@@ -237,18 +244,24 @@ Util.buildInbox = (messages) => {
   messages.forEach((message) => {
     inboxList += `
     <tr>
-      <td>${message.message_created.toLocaleString()}</td>
-      <td><a href="/message/view/${message.message_id}">${message.message_subject}</a></td>
-      <td>${message.account_firstname} ${message.account_type}</td>
-      <td>${message.message_read ? "✓" : " "}</td>
+      <td>${message?.message_created?.toLocaleString() || "Unknown Date"}</td>
+      <td>
+        <a href="/message/view/${message?.message_id || "#"}">
+          ${message?.message_subject || "No Subject"}
+        </a>
+      </td>
+      <td>${message?.account_firstname || "Unknown"} (${message?.account_type || "Unknown"})</td>
+      <td>${message?.message_read ? "✓" : " "}</td>
     </tr>`;
   });
 
   inboxList += `
-  </tbody>
-  </table> `;
+    </tbody>
+  </table>`;
+
   return inboxList;
 };
+
 
 Util.buildRecipientList = (recipientData, preselected = null) => {
   let list = `<select name="message_to" required>`;

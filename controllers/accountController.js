@@ -30,7 +30,8 @@ async function registerAccount(req, res) {
   let hashedPassword;
   try {
  
-    hashedPassword = await bcrypt.hashSync(account_password, 10);
+    hashedPassword = await bcrypt.hash(account_password, 10);
+
   } catch (error) {
     req.flash(
       "notice",
@@ -41,6 +42,7 @@ async function registerAccount(req, res) {
       nav,
       errors: null,
     });
+    return;
   }
 
   const regResult = await accountModel.registerAccount(
@@ -88,6 +90,7 @@ async function accountLogin(req, res) {
   const accountData = await accountModel.getAccountByEmail(account_email);
   if (!accountData) {
     req.flash("notice", "Please check your credentials and try again.");
+
     res.status(400).render("account/login", {
       title: "Login",
       nav,
@@ -105,11 +108,18 @@ async function accountLogin(req, res) {
       return res.redirect("/account/");
     } 
     else {
-      req.flash("notice", "Please check your credentials and try again."); 
-      res.redirect("/account/");
+      req.flash("notice", "Please check your credentials and try again.");
+return res.redirect("/account/"); 
+
     }
   } catch (error) {
-    return new Error("Access Forbidden");
+    console.error("Error during login:", error);
+    req.flash("notice", "Login failed. Please try again.");
+    return res.status(500).render("account/login", {
+      title: "Login",
+      errors: null,
+      nav,
+    });
   }
 }
 
@@ -141,6 +151,10 @@ async function buildUpdate(req, res, next) {
   let nav = await utilities.getNav();
 
   const accountDetails = await accountModel.getAccountById(req.params.accountId);
+if (!accountDetails) {
+  req.flash("notice", "Account not found.");
+  return res.redirect("/account/");
+}
   const {account_id, account_firstname, account_lastname, account_email} = accountDetails;
   res.render("account/update", {
     title: "Update",
@@ -209,7 +223,8 @@ async function updatePassword(req, res) {
   let hashedPassword;
   try {
  
-    hashedPassword = await bcrypt.hashSync(account_password, 10);
+    hashedPassword = await bcrypt.hash(account_password, 10);
+
   } catch (error) {
     req.flash(
       "notice",
@@ -220,6 +235,7 @@ async function updatePassword(req, res) {
       nav,
       errors: null,
     });
+    return
   }
 
   const regResult = await accountModel.updatePassword(account_id, hashedPassword);

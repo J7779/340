@@ -2,6 +2,8 @@ const pool = require("../database/");
 
 
 async function getMessagesToId(accountId, archived = false) {
+  console.log("Fetching messages for accountId:", accountId, "Archived:", archived);
+  
   const sqlQuery = `
     SELECT 
         message_id, 
@@ -15,16 +17,21 @@ async function getMessagesToId(accountId, archived = false) {
         account_firstname, 
         account_lastname, 
         account_type
-    FROM public.message JOIN public.account ON public.message.message_from = public.account.account_id
+    FROM public.message 
+    JOIN public.account ON public.message.message_from = public.account.account_id
     WHERE message_to = $1 AND message_archived = $2
     ORDER BY message_created DESC`;
 
   try {
-    return (await pool.query(sqlQuery, [accountId, archived])).rows;
+    const result = await pool.query(sqlQuery, [accountId, archived]);
+    console.log("Messages retrieved:", result.rows);
+    return result.rows || [];
   } catch (error) {
-    console.error(error.message);
+    console.error("Database query error:", error);
+    return [];
   }
 }
+
 
 async function getMessageById(accountId) {
   const sqlQuery = `
